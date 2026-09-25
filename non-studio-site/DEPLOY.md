@@ -120,7 +120,7 @@ Go to `https://your-domain/admin` and sign in with the email and password from s
 
 - **Inquiries**: every booking form submission, newest first. Set each one to New, Replied, Booked, or Archived. Click an email address to reply.
 - **Photos**: upload or replace any photo on the site, including the slideshow (desktop and mobile), category covers, 12 gallery photos per category, the book spread, and the About portrait. Large photos are resized automatically. Empty gallery frames stay hidden on the site.
-- **Text**: edit the headline, paragraphs, contact copy, About name and bio, and the Instagram link. **Reset** restores the original copy.
+- **Text**: edit the headline, paragraphs, contact copy, the About name and bio, and the Instagram link. **Reset** restores the original copy.
 
 Changes go live immediately. No redeploy is needed. Visitors see them on their next page load.
 
