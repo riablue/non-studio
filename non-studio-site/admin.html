@@ -216,11 +216,11 @@ input,select,textarea,button{font:inherit;color:inherit}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 const I = ['images/booking.jpg','images/model-portfolio.jpg','images/commercial.jpg','images/senior-portrait.jpg','images/couples.jpg','images/personal-portrait.jpg'];
-const HERO = [0, 3, 1, 4, 5];
+const HERO = [0, 3, 1, 4, 5, -1, -1, -1];
 const CATS = ['Model Portfolio', 'Commercial', 'Senior Portrait', 'Couples', 'Personal Portrait'];
 const GROUPS = [
-  { title: 'Home · Slideshow · Desktop', note: 'Landscape, 16:9 recommended · Adjust to set the crop', ratio: '16/9', crop: 16 / 9, min: '240px', slots: HERO.map((k, i) => ({ id: 'hero-' + (i + 1), def: I[k], label: 'Slide 0' + (i + 1) })) },
-  { title: 'Home · Slideshow · Mobile', note: 'Portrait, 9:16 recommended · Adjust to set the crop', ratio: '9/19.5', crop: 9 / 19.5, min: '130px', slots: HERO.map((k, i) => ({ id: 'hero-m-' + (i + 1), def: I[k], label: 'Slide 0' + (i + 1) })) },
+  { title: 'Home · Slideshow · Desktop', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '16/9', crop: 16 / 9, min: '240px', slots: HERO.map((k, i) => ({ id: 'hero-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
+  { title: 'Home · Slideshow · Mobile', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '9/19.5', crop: 9 / 19.5, min: '130px', slots: HERO.map((k, i) => ({ id: 'hero-m-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
   { title: 'Category covers', note: 'Shown on the home page', ratio: '4/5', min: '170px', slots: CATS.map((c, i) => ({ id: 'cover-' + (i + 1), def: I[i + 1], label: c })) }
 ].concat(CATS.map((c, i) => ({ title: c, note: 'Category gallery · up to 12', ratio: '4/5', min: '150px', slots: Array.from({ length: 12 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', label: String(j + 1).padStart(2, '0') })) })), [
   { title: 'Book spread', note: 'Shown in black & white', ratio: '4/5', min: '170px', slots: [{ id: 'book-photo', def: I[0], label: 'Right page' }] },
