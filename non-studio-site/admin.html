@@ -132,7 +132,7 @@ input,select,textarea,button{font:inherit;color:inherit}
                 <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
                   <div style="aspect-ratio:{{ g.ratio }};position:relative;overflow:hidden;background:#e6e2da;opacity:{{ s.dim }}">
                     <sc-if value="{{ s.hasSrc }}" hint-placeholder-val="{{ true }}">
-                      <img src="{{ s.src }}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                      <img src="{{ s.src }}" alt="" loading="lazy" onLoad="{{ s.onLoad }}" style="position:absolute;left:{{ s.l }};top:{{ s.t }};width:{{ s.w }};height:{{ s.h }};max-width:none;transform:translate(-50%,-50%);object-fit:cover">
                     </sc-if>
                     <sc-if value="{{ s.noSrc }}" hint-placeholder-val="{{ false }}">
                       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Courier Prime',monospace;font-size:12px;color:#8a8375">Empty</div>
@@ -141,6 +141,9 @@ input,select,textarea,button{font:inherit;color:inherit}
                   <span style="font-family:'Courier Prime',monospace;font-size:12px;color:#4a463f">{{ s.label }}</span>
                   <div style="display:flex;gap:14px;align-items:center;font-size:14px;font-weight:600">
                     <label style="cursor:pointer;border-bottom:1px solid #161513">{{ s.action }}<input type="file" accept="image/*" onChange="{{ s.onFile }}" style="display:none"></label>
+                    <sc-if value="{{ s.canCrop }}" hint-placeholder-val="{{ false }}">
+                      <button onClick="{{ s.onCrop }}" style="background:none;border:0;border-bottom:1px solid #161513;padding:0;cursor:pointer;font-weight:600">{{ s.cropLabel }}</button>
+                    </sc-if>
                     <sc-if value="{{ s.custom }}" hint-placeholder-val="{{ false }}">
                       <button onClick="{{ s.onReset }}" style="background:none;border:0;padding:0;cursor:pointer;color:#6b665d;font-weight:600">Reset</button>
                     </sc-if>
@@ -176,6 +179,36 @@ input,select,textarea,button{font:inherit;color:inherit}
   </main>
 </sc-if>
 
+<sc-if value="{{ cropOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:15;background:rgba(22,21,19,0.72);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto">
+    <div style="background:#f3f1ec;padding:22px;display:flex;flex-direction:column;gap:16px;max-width:100%;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
+        <span style="font-family:'Times New Roman',Times,serif;text-transform:uppercase;letter-spacing:-0.03em;font-size:24px">{{ cropTitle }}</span>
+        <span style="font-family:'Courier Prime',monospace;font-size:12px;color:#6b665d">Drag to reposition · slider to zoom</span>
+      </div>
+      <div onPointerDown="{{ cropDown }}" onPointerMove="{{ cropMove }}" onPointerUp="{{ cropUp }}" onPointerCancel="{{ cropUp }}" style="position:relative;overflow:hidden;background:#161513;cursor:grab;touch-action:none;user-select:none;align-self:center;width:{{ cropW }};aspect-ratio:{{ cropRatio }}">
+        {{ cropImg }}
+        <div style="position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr">
+          <div style="border-right:1px solid rgba(255,255,255,0.35);border-bottom:1px solid rgba(255,255,255,0.35)"></div><div style="border-right:1px solid rgba(255,255,255,0.35);border-bottom:1px solid rgba(255,255,255,0.35)"></div><div style="border-bottom:1px solid rgba(255,255,255,0.35)"></div>
+          <div style="border-right:1px solid rgba(255,255,255,0.35);border-bottom:1px solid rgba(255,255,255,0.35)"></div><div style="border-right:1px solid rgba(255,255,255,0.35);border-bottom:1px solid rgba(255,255,255,0.35)"></div><div style="border-bottom:1px solid rgba(255,255,255,0.35)"></div>
+          <div style="border-right:1px solid rgba(255,255,255,0.35)"></div><div style="border-right:1px solid rgba(255,255,255,0.35)"></div><div></div>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:14px;font-family:'Courier Prime',monospace;font-size:12px;letter-spacing:0.06em">ZOOM
+        <input type="range" min="1" max="3" step="0.01" value="{{ cropS }}" onChange="{{ cropZoom }}" style="flex:1;accent-color:#1d1a16">
+        <span style="width:44px;text-align:right">{{ cropPct }}</span>
+      </label>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <button onClick="{{ cropReset }}" style="background:none;border:0;padding:0;cursor:pointer;color:#6b665d;font-size:14px;font-weight:600">Reset to center</button>
+        <div style="display:flex;gap:12px">
+          <button onClick="{{ cropCancel }}" style="min-height:42px;padding:0 18px;border:1px solid #cfc9bd;background:transparent;cursor:pointer;font-family:'Courier Prime',monospace;font-size:13px;letter-spacing:0.08em">CANCEL</button>
+          <button onClick="{{ cropSave }}" style="min-height:42px;padding:0 22px;border:0;background:#1d1a16;color:#f3f1ec;cursor:pointer;font-family:'Courier Prime',monospace;font-size:13px;letter-spacing:0.08em" style-hover="background:#a8352a">SAVE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
 <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:20;background:#1d1a16;color:#f3f1ec;padding:12px 20px;font-family:'Courier Prime',monospace;font-size:13px;max-width:calc(100vw - 40px)">{{ toast }}</div>
 </sc-if>
@@ -186,8 +219,8 @@ const I = ['images/booking.jpg','images/model-portfolio.jpg','images/commercial.
 const HERO = [0, 3, 1, 4, 5];
 const CATS = ['Model Portfolio', 'Commercial', 'Senior Portrait', 'Couples', 'Personal Portrait'];
 const GROUPS = [
-  { title: 'Home · Slideshow · Desktop', note: 'Landscape, 16:9 recommended', ratio: '16/9', min: '240px', slots: HERO.map((k, i) => ({ id: 'hero-' + (i + 1), def: I[k], label: 'Slide 0' + (i + 1) })) },
-  { title: 'Home · Slideshow · Mobile', note: 'Portrait, 9:16 recommended', ratio: '9/16', min: '130px', slots: HERO.map((k, i) => ({ id: 'hero-m-' + (i + 1), def: I[k], label: 'Slide 0' + (i + 1) })) },
+  { title: 'Home · Slideshow · Desktop', note: 'Landscape, 16:9 recommended · Adjust to set the crop', ratio: '16/9', crop: 16 / 9, min: '240px', slots: HERO.map((k, i) => ({ id: 'hero-' + (i + 1), def: I[k], label: 'Slide 0' + (i + 1) })) },
+  { title: 'Home · Slideshow · Mobile', note: 'Portrait, 9:16 recommended · Adjust to set the crop', ratio: '9/19.5', crop: 9 / 19.5, min: '130px', slots: HERO.map((k, i) => ({ id: 'hero-m-' + (i + 1), def: I[k], label: 'Slide 0' + (i + 1) })) },
   { title: 'Category covers', note: 'Shown on the home page', ratio: '4/5', min: '170px', slots: CATS.map((c, i) => ({ id: 'cover-' + (i + 1), def: I[i + 1], label: c })) }
 ].concat(CATS.map((c, i) => ({ title: c, note: 'Category gallery · up to 12', ratio: '4/5', min: '150px', slots: Array.from({ length: 12 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', label: String(j + 1).padStart(2, '0') })) })), [
   { title: 'Book spread', note: 'Shown in black & white', ratio: '4/5', min: '170px', slots: [{ id: 'book-photo', def: I[0], label: 'Right page' }] },
@@ -211,6 +244,14 @@ const STATUSES = ['new', 'replied', 'booked', 'archived'];
 const SC = { new: '#a8352a', replied: '#6b665d', booked: '#161513', archived: '#a39a88' };
 const fmt = iso => { const d = new Date(iso); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); };
 const fmtDay = s => new Date(s + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+const parseView = v => { const a = String(v || '').trim().split(/\s+/).map(Number); return a.length === 3 && a.every(Number.isFinite) ? { s: a[0], x: a[1], y: a[2] } : { s: 1, x: 0, y: 0 }; };
+const fitBox = (r, A, v) => {
+  if (!r) return { w: '100%', h: '100%', l: '50%', t: '50%', x: v.x, y: v.y };
+  const w = v.s * Math.max(1, r / A), h = v.s * Math.max(1, A / r);
+  const mx = Math.max(0, (w - 1) * 50), my = Math.max(0, (h - 1) * 50);
+  const x = Math.max(-mx, Math.min(mx, v.x)), y = Math.max(-my, Math.min(my, v.y));
+  return { w: (w * 100).toFixed(3) + '%', h: (h * 100).toFixed(3) + '%', l: (50 + x).toFixed(3) + '%', t: (50 + y).toFixed(3) + '%', x, y };
+};
 async function shrink(file) {
   try {
     const bmp = await createImageBitmap(file);
@@ -221,9 +262,11 @@ async function shrink(file) {
   } catch (e) { return file; }
 }
 class Component extends DCLogic {
-  state = { phase: 'loading', email: '', password: '', authErr: '', logging: false, user: '', tab: 'inquiries', rows: [], filter: 'all', content: {}, drafts: {}, busy: {}, toast: '' };
+  nat = {};
+  state = { crop: null, phase: 'loading', email: '', password: '', authErr: '', logging: false, user: '', tab: 'inquiries', rows: [], filter: 'all', content: {}, drafts: {}, busy: {}, toast: '' };
   componentDidMount() {
     let n = 0;
+    if (/[?&]demo\b/.test(location.search)) { this.demo = true; this.setState({ phase: 'app', user: 'demo (not saved)' }); return; }
     const boot = () => {
       const cfg = window.NON_CONFIG || {};
       const ok = cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && !cfg.SUPABASE_URL.includes('YOUR-');
@@ -262,11 +305,13 @@ class Component extends DCLogic {
     if (error) { this.setState({ rows: prev }); this.flash('Could not update: ' + error.message); }
   }
   async putKey(key, value) {
+    if (this.demo) { this.setState(s => ({ content: { ...s.content, [key]: value } })); return true; }
     const { error } = await this.sb.from('site_content').upsert({ key, value, updated_at: new Date().toISOString() });
     if (error) { this.flash('Could not save: ' + error.message); return false; }
     this.setState(s => ({ content: { ...s.content, [key]: value } })); return true;
   }
   async dropKey(key) {
+    if (this.demo) { this.setState(s => { const c = { ...s.content }; delete c[key]; return { content: c }; }); return true; }
     const { error } = await this.sb.from('site_content').delete().eq('key', key);
     if (error) { this.flash('Could not reset: ' + error.message); return false; }
     this.setState(s => { const c = { ...s.content }; delete c[key]; const d = { ...s.drafts }; delete d[key]; return { content: c, drafts: d }; }); return true;
@@ -280,12 +325,19 @@ class Component extends DCLogic {
       const up = await this.sb.storage.from('site').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
       if (up.error) throw up.error;
       const url = this.sb.storage.from('site').getPublicUrl(path).data.publicUrl;
-      if (await this.putKey('img:' + id, url)) this.flash('Photo updated');
+      if (await this.putKey('img:' + id, url)) {
+        if (this.state.content['view:' + id]) await this.dropKey('view:' + id);
+        this.flash('Photo updated');
+      }
     } catch (e) { this.flash('Upload failed: ' + (e.message || e)); }
     this.setState(s => { const b = { ...s.busy }; delete b[id]; return { busy: b }; });
   }
+  setCropView(v) {
+    this.setState(p => { if (!p.crop) return null; const n = { ...p.crop, ...v }; const b = fitBox(n.r, n.A, n); return { crop: { ...n, x: b.x, y: b.y } }; });
+  }
   renderVals() {
     const s = this.state;
+    const c = s.crop, cb = c ? fitBox(c.r, c.A, c) : null;
     const setTab = tab => () => this.setState({ tab });
     const counts = { all: s.rows.length }; STATUSES.forEach(k => { counts[k] = s.rows.filter(r => (r.status || 'new') === k).length; });
     const shown = s.rows.filter(r => s.filter === 'all' ? (r.status || 'new') !== 'archived' : (r.status || 'new') === s.filter);
@@ -319,12 +371,36 @@ class Component extends DCLogic {
           status: st, statusColor: SC[st] || '#161513', onStatus: e => this.setStatus(r.id, e.target.value)
         };
       }),
+      cropOpen: !!c, cropTitle: c ? c.title : '', cropSrc: c ? c.src : '', cropRatio: c ? String(c.A) : '1',
+      cropW: c ? 'min(86vw, 820px, calc((100vh - 210px) * ' + c.A.toFixed(4) + '))' : '0',
+      cropL: cb ? cb.l : '50%', cropT: cb ? cb.t : '50%', cropIW: cb ? cb.w : '100%', cropIH: cb ? cb.h : '100%',
+      cropS: c ? c.s : 1, cropPct: c ? Math.round(c.s * 100) + '%' : '',
+      cropImg: c ? React.createElement('img', { src: c.src, alt: '', draggable: false, onLoad: e => { const im = e.target; if (im.naturalWidth && !this.state.crop.r) this.setCropView({ r: im.naturalWidth / im.naturalHeight }); }, style: { position: 'absolute', left: cb.l, top: cb.t, width: cb.w, height: cb.h, maxWidth: 'none', transform: 'translate(-50%,-50%)', objectFit: 'cover', pointerEvents: 'none' } }) : null,
+      cropLoad: e => { const im = e.target; if (im.naturalWidth) this.setCropView({ r: im.naturalWidth / im.naturalHeight }); },
+      cropZoom: e => this.setCropView({ s: parseFloat(e.target.value) }),
+      cropDown: e => { if (!c) return; e.currentTarget.setPointerCapture(e.pointerId); const rc = e.currentTarget.getBoundingClientRect(); this.drag = { px: e.clientX, py: e.clientY, x: c.x || 0, y: c.y || 0, fw: rc.width, fh: rc.height }; e.currentTarget.style.cursor = 'grabbing'; },
+      cropMove: e => { const d = this.drag; if (!d) return; this.setCropView({ x: d.x + (e.clientX - d.px) / d.fw * 100, y: d.y + (e.clientY - d.py) / d.fh * 100 }); },
+      cropUp: e => { this.drag = null; e.currentTarget.style.cursor = 'grab'; },
+      cropReset: () => this.setCropView({ s: 1, x: 0, y: 0 }),
+      cropCancel: () => this.setState({ crop: null }),
+      cropSave: async () => {
+        const key = 'view:' + c.id, x = c.x || 0, y = c.y || 0;
+        const isDefault = Math.abs(c.s - 1) < 0.005 && Math.abs(x) < 0.05 && Math.abs(y) < 0.05;
+        const ok = isDefault ? (s.content[key] ? await this.dropKey(key) : true) : await this.putKey(key, c.s.toFixed(3) + ' ' + x.toFixed(2) + ' ' + y.toFixed(2));
+        if (ok) { this.setState({ crop: null }); this.flash('Crop saved'); }
+      },
       groups: GROUPS.map(g => ({ ...g, slots: g.slots.map(sl => {
         const key = 'img:' + sl.id, cur = s.content[key] || sl.def, busy = !!s.busy[sl.id];
-        return { label: sl.label, src: cur, hasSrc: !!cur, noSrc: !cur, custom: !!s.content[key] && !busy, dim: busy ? 0.4 : 1,
+        const view = parseView(s.content['view:' + sl.id]), nr = this.nat[cur];
+        const fb = g.crop ? fitBox(nr, g.crop, view) : fitBox(null, 1, view);
+        return { l: fb.l, t: fb.t, w: fb.w, h: fb.h,
+          onLoad: e => { const im = e.target; if (g.crop && im.naturalWidth && !this.nat[cur]) { this.nat[cur] = im.naturalWidth / im.naturalHeight; this.forceUpdate(); } },
+          canCrop: !!g.crop && !!cur && !busy, cropLabel: s.content['view:' + sl.id] ? 'Adjust ●' : 'Adjust',
+          onCrop: () => this.setState({ crop: { id: sl.id, src: cur, A: g.crop, r: this.nat[cur] || null, title: g.title.replace('Home · ', '') + ' · ' + sl.label, ...view } }),
+          label: sl.label, src: cur, hasSrc: !!cur, noSrc: !cur, custom: !!s.content[key] && !busy, dim: busy ? 0.4 : 1,
           action: busy ? 'Uploading…' : (cur ? 'Replace' : 'Upload'),
           onFile: e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; this.upload(sl.id, f); },
-          onReset: async () => { if (await this.dropKey(key)) this.flash('Photo reset'); } };
+          onReset: async () => { if (await this.dropKey(key)) { if (s.content['view:' + sl.id]) await this.dropKey('view:' + sl.id); this.flash('Photo reset'); } } };
       }) })),
       fields: TEXTS.map(t => {
         const saved = s.content[t.k], cur = saved != null ? saved : t.def, draft = s.drafts[t.k];

@@ -10,6 +10,8 @@
     document.querySelectorAll('image-slot[id]').forEach(function (el) {
       var v = m['img:' + el.id];
       if (v && el.getAttribute('src') !== v) el.setAttribute('src', v);
+      var vw = m['view:' + el.id];
+      if (vw && el.getAttribute('view') !== vw) el.setAttribute('view', vw);
       if (/^cat\d+-\d+$/.test(el.id) && el.parentElement) {
         el.parentElement.style.display = (v || el.getAttribute('src')) ? '' : 'none';
       }

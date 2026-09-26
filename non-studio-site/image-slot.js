@@ -438,7 +438,7 @@
 
   class ImageSlot extends HTMLElement {
     static get observedAttributes() {
-      return ['shape', 'radius', 'mask', 'fit', 'placeholder', 'src', 'id', 'credit', 'credit-href'];
+      return ['shape', 'radius', 'mask', 'fit', 'placeholder', 'src', 'id', 'credit', 'credit-href', 'view'];
     }
 
     /** Duplicate-slide hook (called by deck-stage, see its
@@ -1099,6 +1099,10 @@
       this._userUrl = (stored && stored.u) || null;
       const url = this._userUrl || srcAttr;
       // Don't clobber an in-flight reframe with a store-triggered re-render.
+      if (!stored || !Number.isFinite(stored.s)) {
+        const va = (this.getAttribute('view') || '').trim().split(/\s+/).map(Number);
+        if (va.length === 3 && va.every(Number.isFinite)) stored = { u: stored && stored.u, s: va[0], x: va[1], y: va[2] };
+      }
       if (!this.hasAttribute('data-reframe')) {
         this._view = {
           s: stored && Number.isFinite(stored.s) ? clampS(stored.s) : 1,
