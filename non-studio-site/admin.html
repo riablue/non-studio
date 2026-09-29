@@ -130,7 +130,7 @@ input,select,textarea,button{font:inherit;color:inherit}
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({{ g.min }},1fr));gap:18px">
               <sc-for list="{{ g.slots }}" as="s" hint-placeholder-count="5">
                 <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
-                  <div style="aspect-ratio:{{ g.ratio }};position:relative;overflow:hidden;background:#e6e2da;opacity:{{ s.dim }}">
+                  <div style="aspect-ratio:{{ s.ratio }};position:relative;overflow:hidden;background:#e6e2da;opacity:{{ s.dim }}">
                     <sc-if value="{{ s.hasSrc }}" hint-placeholder-val="{{ true }}">
                       <img src="{{ s.src }}" alt="" loading="lazy" onLoad="{{ s.onLoad }}" style="position:absolute;left:{{ s.l }};top:{{ s.t }};width:{{ s.w }};height:{{ s.h }};max-width:none;transform:translate(-50%,-50%);object-fit:cover">
                     </sc-if>
@@ -218,15 +218,22 @@ input,select,textarea,button{font:inherit;color:inherit}
 const I = ['images/booking.jpg','images/model-portfolio.jpg','images/commercial.jpg','images/senior-portrait.jpg','images/couples.jpg','images/personal-portrait.jpg'];
 const HERO = [0, 3, 1, 4, 5, -1, -1, -1];
 const CATS = ['Model Portfolio', 'Commercial', 'Senior Portrait', 'Couples', 'Personal Portrait'];
+const CRS = ['960/1344', '796/1115', '910/1274', '960/1206', '960/652'];
+const CR = CRS.map(r => { const [a, b] = r.split('/').map(Number); return a / b; });
 const GROUPS = [
   { title: 'Home · Slideshow · Desktop', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '16/9', crop: 16 / 9, min: '240px', slots: HERO.map((k, i) => ({ id: 'hero-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
   { title: 'Home · Slideshow · Mobile', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '9/19.5', crop: 9 / 19.5, min: '130px', slots: HERO.map((k, i) => ({ id: 'hero-m-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
-  { title: 'Category covers', note: 'Shown on the home page', ratio: '4/5', min: '170px', slots: CATS.map((c, i) => ({ id: 'cover-' + (i + 1), def: I[i + 1], label: c })) }
-].concat(CATS.map((c, i) => ({ title: c, note: 'Category gallery · up to 12', ratio: '4/5', min: '150px', slots: Array.from({ length: 12 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', label: String(j + 1).padStart(2, '0') })) })), [
-  { title: 'Book spread', note: 'Shown in black & white', ratio: '4/5', min: '170px', slots: [{ id: 'book-photo', def: I[0], label: 'Right page' }] },
-  { title: 'About', note: 'Photographer portrait', ratio: '4/5', min: '170px', slots: [{ id: 'about-portrait', def: '', label: 'Portrait' }] }
+  { title: 'Category covers', note: 'Shown on the home page · Adjust to set the crop', ratio: '4/5', crop: 0.8, min: '170px', slots: CATS.map((c, i) => ({ id: 'cover-' + (i + 1), def: I[i + 1], label: c, cat: i, ratio: CRS[i], crop: CR[i] })) }
+].concat(CATS.map((c, i) => ({ title: c, cat: i, note: 'Category gallery · up to 12', ratio: '4/5', crop: 0.8, min: '150px', slots: Array.from({ length: 12 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', label: String(j + 1).padStart(2, '0') })) })), [
+  { title: 'Book spread', note: 'Shown in black & white', ratio: '4/5', crop: 0.8, min: '170px', slots: [{ id: 'book-photo', def: I[0], label: 'Right page' }] },
+  { title: 'About', note: 'Photographer portrait', ratio: '4/5', crop: 0.8, min: '170px', slots: [{ id: 'about-portrait', def: '', label: 'Portrait' }] }
 ]);
 const TEXTS = [
+  { k: 'txt:cat.1', label: 'CATEGORY 01 · NAME', def: 'Model Portfolio', rows: 1 },
+  { k: 'txt:cat.2', label: 'CATEGORY 02 · NAME', def: 'Commercial', rows: 1 },
+  { k: 'txt:cat.3', label: 'CATEGORY 03 · NAME', def: 'Senior Portrait', rows: 1 },
+  { k: 'txt:cat.4', label: 'CATEGORY 04 · NAME', def: 'Couples', rows: 1 },
+  { k: 'txt:cat.5', label: 'CATEGORY 05 · NAME', def: 'Personal Portrait', rows: 1 },
   { k: 'txt:hero.tagline', label: 'HOME · HERO TAGLINE', def: 'Photography shaped around your vision.', rows: 2 },
   { k: 'txt:hero.title', label: 'HOME · HERO HEADLINE', def: 'For the way you dream', rows: 2 },
   { k: 'txt:mood', label: 'HOME · ITALIC QUOTE', def: 'a mood you want to explore, a story you want to tell, a side of yourself you haven’t seen before.', rows: 3 },
@@ -337,6 +344,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const s = this.state;
+    const catName = i => s.content['txt:cat.' + (i + 1)] || CATS[i];
     const c = s.crop, cb = c ? fitBox(c.r, c.A, c) : null;
     const setTab = tab => () => this.setState({ tab });
     const counts = { all: s.rows.length }; STATUSES.forEach(k => { counts[k] = s.rows.filter(r => (r.status || 'new') === k).length; });
@@ -389,19 +397,20 @@ class Component extends DCLogic {
         const ok = isDefault ? (s.content[key] ? await this.dropKey(key) : true) : await this.putKey(key, c.s.toFixed(3) + ' ' + x.toFixed(2) + ' ' + y.toFixed(2));
         if (ok) { this.setState({ crop: null }); this.flash('Crop saved'); }
       },
-      groups: GROUPS.map(g => ({ ...g, slots: g.slots.map(sl => {
+      groups: GROUPS.map(g => { const gt = g.cat != null ? catName(g.cat) : g.title; return { ...g, title: gt, slots: g.slots.map(sl => {
         const key = 'img:' + sl.id, cur = s.content[key] || sl.def, busy = !!s.busy[sl.id];
-        const view = parseView(s.content['view:' + sl.id]), nr = this.nat[cur];
-        const fb = g.crop ? fitBox(nr, g.crop, view) : fitBox(null, 1, view);
-        return { l: fb.l, t: fb.t, w: fb.w, h: fb.h,
-          onLoad: e => { const im = e.target; if (g.crop && im.naturalWidth && !this.nat[cur]) { this.nat[cur] = im.naturalWidth / im.naturalHeight; this.forceUpdate(); } },
-          canCrop: !!g.crop && !!cur && !busy, cropLabel: s.content['view:' + sl.id] ? 'Adjust ●' : 'Adjust',
-          onCrop: () => this.setState({ crop: { id: sl.id, src: cur, A: g.crop, r: this.nat[cur] || null, title: g.title.replace('Home · ', '') + ' · ' + sl.label, ...view } }),
-          label: sl.label, src: cur, hasSrc: !!cur, noSrc: !cur, custom: !!s.content[key] && !busy, dim: busy ? 0.4 : 1,
+        const view = parseView(s.content['view:' + sl.id]), nr = this.nat[cur], A = sl.crop || g.crop;
+        const lab = sl.cat != null ? catName(sl.cat) : sl.label;
+        const fb = fitBox(nr, A, view);
+        return { l: fb.l, t: fb.t, w: fb.w, h: fb.h, ratio: sl.ratio || g.ratio,
+          onLoad: e => { const im = e.target; if (im.naturalWidth && !this.nat[cur]) { this.nat[cur] = im.naturalWidth / im.naturalHeight; this.forceUpdate(); } },
+          canCrop: !!cur && !busy, cropLabel: s.content['view:' + sl.id] ? 'Adjust ●' : 'Adjust',
+          onCrop: () => this.setState({ crop: { id: sl.id, src: cur, A, r: this.nat[cur] || null, title: gt.replace('Home · ', '') + ' · ' + lab, ...view } }),
+          label: lab, src: cur, hasSrc: !!cur, noSrc: !cur, custom: !!s.content[key] && !busy, dim: busy ? 0.4 : 1,
           action: busy ? 'Uploading…' : (cur ? 'Replace' : 'Upload'),
           onFile: e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; this.upload(sl.id, f); },
           onReset: async () => { if (await this.dropKey(key)) { if (s.content['view:' + sl.id]) await this.dropKey('view:' + sl.id); this.flash('Photo reset'); } } };
-      }) })),
+      }) }; }),
       fields: TEXTS.map(t => {
         const saved = s.content[t.k], cur = saved != null ? saved : t.def, draft = s.drafts[t.k];
         const value = draft != null ? draft : cur, dirty = draft != null && draft !== cur;
