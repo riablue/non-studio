@@ -140,7 +140,7 @@ input,select,textarea,button{font:inherit}
       </div>
     </div>
     <div data-ex-hint="1" style="position:absolute;left:0;right:0;bottom:4px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;opacity:0;color:#161513;font-family:'Courier Prime',ui-monospace,monospace;font-size:12px;letter-spacing:0.14em">
-      <span style="background:rgba(243,241,236,0.92);padding:8px 14px 7px">KEEP SCROLLING</span>
+      <span>KEEP SCROLLING</span>
       <span data-ex-arrow="1" style="display:block;width:0;height:0;margin-top:-2px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #161513;will-change:transform"></span>
     </div>
   </div>
@@ -298,17 +298,41 @@ input,select,textarea,button{font:inherit}
     <div style="padding:clamp(40px,7vw,96px) clamp(20px,4vw,56px) clamp(64px,9vw,120px);display:flex;flex-direction:column;gap:clamp(40px,6vw,80px)">
       <h2 style="margin:0;font-family:'Times New Roman',Times,serif;font-weight:400;text-transform:uppercase;letter-spacing:-0.055em;font-size:clamp(44px,8vw,128px);line-height:0.88">{{ cat.title }}</h2>
       <sc-for list="{{ catPages }}" as="cp" hint-placeholder-count="1">
-        <div style="display:{{ cp.display }};flex-direction:column;gap:clamp(48px,8vw,120px)">
-          <sc-for list="{{ cp.rows }}" as="row" hint-placeholder-count="2">
-            <div style="display:flex;align-items:flex-start">
-              <sc-for list="{{ row.items }}" as="it" hint-placeholder-count="2">
-                <div style="flex:0 0 auto;width:{{ it.w }};margin-left:{{ it.ml }};margin-top:{{ it.mt }};aspect-ratio:{{ it.ratio }};position:relative"><image-slot id="{{ it.id }}" src="{{ it.src }}" view="{{ it.view }}" shape="rect" mask="inset(0)" style="pointer-events:none"></image-slot></div>
+        <div style="display:{{ cp.display }};flex-direction:column;gap:clamp(40px,6vw,96px)">
+          <sc-for list="{{ cp.bands }}" as="band" hint-placeholder-count="2">
+            <div style="display:grid;grid-template-columns:repeat({{ cp.cols }},minmax(0,1fr));column-gap:clamp(10px,1.4vw,20px);align-items:start">
+              <sc-for list="{{ band.items }}" as="it" hint-placeholder-count="3">
+                <div data-gal="1" data-mk="{{ it.id }}" data-sp="{{ it.sp }}" style="grid-column:{{ it.col }};margin-top:{{ it.mt }};aspect-ratio:{{ it.ratio }};position:relative">
+                  <div style="position:absolute;inset:0;overflow:hidden;opacity:0;transform-origin:50% 50%;will-change:transform,opacity,filter">
+                    <image-slot id="{{ it.id }}" src="{{ it.src }}" view="{{ it.view }}" shape="rect" mask="inset(0)" style="pointer-events:none"></image-slot>
+                    <div data-gal-veil="1" style="position:absolute;inset:0;background:#f3f1ec;opacity:0;pointer-events:none"></div>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-for list="{{ band.texts }}" as="tx" hint-placeholder-count="0">
+                <div data-gal="1" data-gal-t="1" data-sp="{{ tx.sp }}" style="grid-column:{{ tx.col }};margin-top:{{ tx.mt }};position:relative;padding:clamp(4px,1vw,12px) 0">
+                  <div style="opacity:0;will-change:transform,opacity,filter">
+                    <sc-if value="{{ tx.s0 }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-family:'Times New Roman',Times,serif;font-size:clamp(30px,3.6vw,56px);line-height:0.95;letter-spacing:-0.045em;text-wrap:pretty;color:#161513">{{ tx.text }}</p></sc-if>
+                    <sc-if value="{{ tx.s1 }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-family:'Courier Prime',ui-monospace,monospace;font-size:13px;line-height:1.45;max-width:30ch;text-wrap:pretty;color:#161513">{{ tx.text }}</p></sc-if>
+                    <sc-if value="{{ tx.s2 }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-family:'Times New Roman',Times,serif;font-style:italic;font-size:clamp(22px,2.2vw,34px);line-height:1.1;letter-spacing:-0.02em;max-width:18ch;text-wrap:pretty;color:#161513">{{ tx.text }}</p></sc-if>
+                    <sc-if value="{{ tx.s3 }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-family:'Courier Prime',ui-monospace,monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;text-wrap:pretty;color:#161513">{{ tx.text }}</p></sc-if>
+                  </div>
+                </div>
               </sc-for>
             </div>
           </sc-for>
           <sc-if value="{{ cp.empty }}" hint-placeholder-val="{{ false }}">
             <p style="margin:0;font-family:'Courier Prime',ui-monospace,monospace;font-size:14px;color:#6b665d">Photos coming soon.</p>
           </sc-if>
+        </div>
+        <div style="display:{{ cp.pdisplay }};flex-direction:column;width:100%;max-width:1080px;margin:calc(12px - clamp(40px,6vw,80px)) auto 0">
+          <sc-for list="{{ cp.packRows }}" as="pr" hint-placeholder-count="0">
+            <div style="display:flex;align-items:flex-start">
+              <sc-for list="{{ pr.items }}" as="pi" hint-placeholder-count="0">
+                <div data-pk="{{ pi.key }}" style="flex:0 0 auto;width:{{ pi.w }};aspect-ratio:{{ pi.ratio }};position:relative;transform-origin:0 0;will-change:transform"><image-slot id="{{ pi.pid }}" src="{{ pi.src }}" view="{{ pi.view }}" shape="rect" mask="inset(0)" style="pointer-events:none"></image-slot></div>
+              </sc-for>
+            </div>
+          </sc-for>
         </div>
       </sc-for>
       <button onClick="{{ nextCat }}" style="align-self:flex-end;display:flex;flex-direction:column;align-items:flex-end;gap:6px;background:none;border:0;cursor:pointer;color:#161513;padding:0">
@@ -339,17 +363,38 @@ const CATS = [
   { title: 'Couples', src: IMGS[4], pos: '50% 30%' },
   { title: 'Personal Portrait', src: IMGS[5], pos: '30% 40%' }
 ];
-const PAT = {
-  2: [{ w: [46, 27], ml: [0, 18], mt: ['0px', '0px'] }, { w: [26, 42], ml: [8, 16], mt: ['0px', '14vw'] }],
-  3: [{ w: [30, 20, 25], ml: [0, 8, 9], mt: ['0px', '10vw', '4vw'] }, { w: [22, 30, 22], ml: [6, 8, 8], mt: ['6vw', '0px', '12vw'] }]
+const GAL_TXT = ['Light first, then the person in it.', 'Shot on location · natural light · minimal retouching', 'Every frame begins with a conversation.', 'Selected frames, 2024 — 2026'];
+const BANDS = {
+  d: [[[1, 1, 0, 0], [4, 2, 1, 0], [6, 1, 0, 2]], [[1, 2, 1, 0], [3, 1, 0, 0], [6, 1, 0, 5]], [[3, 1, 0, 3], [4, 1, 0, 0], [5, 2, 1, 0]], [[1, 2, 1, 0], [4, 1, 0, 1]]],
+  m: [[[1, 3, 1, 0]], [[1, 2, 0, 0], [3, 2, 0, 16]], [[2, 3, 1, 0]], [[1, 2, 0, 10], [3, 2, 0, 0]]]
 };
-function layRow(its, cols, r) {
-  const p = PAT[cols][r % 2], n = its.length;
-  let w = its.map((it, i) => p.w[i] * (it.hz ? 1.55 : 1)), ml = p.ml.slice(0, n);
-  const ws = w.reduce((a, b) => a + b, 0), avail = 100 - 4 * (n - 1);
-  if (ws > avail) { w = w.map(x => x * avail / ws); ml = ml.map((_, i) => i ? 4 : 0); }
-  else { const free = 100 - ws, ms = ml.reduce((a, b) => a + b, 0); if (ms > free) ml = ml.map(x => x * free / ms); }
-  return its.map((it, i) => ({ id: it.id, src: it.src, view: it.view, ratio: it.hz ? '3/2' : '4/5', w: w[i].toFixed(2) + '%', ml: ml[i].toFixed(2) + '%', mt: p.mt[i] }));
+const TXT_D = [['2 / span 2', '0vw'], ['4 / span 2', '6vw'], ['1 / span 2', '9vw'], ['5 / span 2', '3vw']];
+const TXT_M = [['1 / span 3', '0vw'], ['2 / span 3', '0vw'], ['1 / span 2', '0vw'], ['3 / span 2', '0vw']];
+const SP = [0.12, -0.08, 0.22, -0.14, 0.06, 0.26, -0.1, 0.16, -0.18, 0.1, 0.2];
+function layMosaic(items, mob, texts, k) {
+  k = k || 0; const P = BANDS[mob ? 'm' : 'd'], bands = [], N = mob ? 4 : 6, flip = k % 2 === 1; let i = 0, b = 0;
+  const C = (c, s) => (flip ? N - (c + s - 1) + 1 : c) + ' / span ' + s;
+  const CT = str => { const m = str.match(/(\d+) \/ span (\d+)/); return C(+m[1], +m[2]); };
+  const mkT = (t, j, pos) => { const st = (j + k) % 4; return { text: t, col: CT(pos[0]), mt: pos[1], s0: st === 0, s1: st === 1, s2: st === 2, s3: st === 3, sp: String(SP[(j * 3 + 4 + k) % SP.length] * 0.6) }; };
+  while (i < items.length) {
+    const bi = (b + k) % P.length, spec = P[bi], row = [];
+    for (const [c, s, big, mt] of spec) { if (i >= items.length) break; const it = items[i];
+      row.push({ id: it.id, src: it.src, view: it.view, col: C(c, s), mt: (mt + ((k * 2 + b) % 3) * 2) + 'vw', sp: String(SP[(i + k * 2) % SP.length]), ratio: it.hz ? (big ? '3/2' : '4/3') : (big ? '4/5' : '3/4') }); i++; }
+    const t = b < 4 ? (texts[b] || '').trim() : '';
+    if (mob) { bands.push({ items: row, texts: [] }); if (t) bands.push({ items: [], texts: [mkT(t, b, TXT_M[(b + k) % 4])] }); }
+    else bands.push({ items: row, texts: t ? [mkT(t, b, TXT_D[(b + k) % 4])] : [] });
+    b++;
+  }
+  return bands;
+}
+const PACK = { d: [[50, 50], [30, 40, 30], [45, 55], [34, 33, 33]], m: [[50, 50], [58, 42], [42, 58]] };
+function layPack(items, mob, k) {
+  k = k || 0; const P = PACK[mob ? 'm' : 'd'], rows = []; let i = 0, r = k;
+  while (i < items.length) { const ws = P[r % P.length], row = [];
+    for (const w of ws) { if (i >= items.length) break; const it = items[i++]; row.push({ key: it.id, pid: 'pk-' + it.id, src: it.src, view: it.view, w: w + '%', ratio: it.hz ? '3/2' : '4/5' }); }
+    if (row.length < ws.length) { const tot = ws.slice(0, row.length).reduce((a, b) => a + b, 0); row.forEach((x, j) => { x.w = (ws[j] * 100 / tot).toFixed(2) + '%'; }); }
+    rows.push({ items: row }); r++; }
+  return rows;
 }
 const catT = i => ((window.NON_CMS || {})['txt:cat.' + (i + 1)] || CATS[i].title);
 const WD = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -416,6 +461,35 @@ class Component extends DCLogic {
   }
   componentDidMount() {
     this.onCms = () => this.forceUpdate(); window.addEventListener('cms:ready', this.onCms);
+    this.reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const gCl = x => x < 0 ? 0 : x > 1 ? 1 : x, gEase = x => 1 - Math.pow(1 - x, 3);
+    const galStep = () => {
+      const root = this.catRef.current;
+      if (root) { const vh = root.clientHeight, vw = root.clientWidth, L = 0.1;
+        if (!this.state.packed) { if (root.scrollTop > 0 && root.scrollTop + vh >= root.scrollHeight - 4) { this.galBottom = true; this.galBT = root.scrollTop; } else if (this.galBottom && root.scrollTop < this.galBT - 24) this.pack(); }
+        const still = this.reduce || this.galDone;
+        const now = performance.now(); let qi = 0;
+        root.querySelectorAll('[data-gal]').forEach(el => { const r = el.getBoundingClientRect(); if (!r.height) return;
+          const inn = el.firstElementChild; if (!inn) return;
+          const veil = el.querySelector('[data-gal-veil]'), txt = el.hasAttribute('data-gal-t'), sp = +el.getAttribute('data-sp') || 0;
+          const e = still ? 1 : gEase(gCl((vh - r.top) / (vh * 0.55)));
+          const x = still ? 0 : gCl((vh * 0.4 - r.bottom) / (vh * 0.4));
+          const py = still ? 0 : -((r.top + r.height / 2) - vh / 2) * sp;
+          const g = el._g || (el._g = { e: 0, x, py, t0: now + (r.top < vh ? qi++ : 0) * 160 + 250 });
+          const et = now < g.t0 ? 0 : e;
+          g.e += (et - g.e) * (et > g.e ? 0.022 : L); g.x += (x - g.x) * L; g.py += (py - g.py) * L;
+          const dx = txt ? 0 : (vw / 2 - (r.left + r.width / 2)) * 0.22 * (1 - g.e);
+          const s = txt ? 1 - 0.04 * g.x : (1 + 0.16 * (1 - g.e)) * (1 - 0.1 * g.x), b = 10 * g.x;
+          inn.style.opacity = (Math.pow(g.e, 1.6) * (1 - 0.25 * g.x)).toFixed(3);
+          inn.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + ((1 - g.e) * 30 + g.py).toFixed(1) + 'px,0) scale(' + s.toFixed(4) + ')';
+          inn.style.filter = b > 0.05 ? 'blur(' + b.toFixed(2) + 'px) saturate(' + (1 - 0.8 * g.x).toFixed(3) + ')' : 'none';
+          el.style.zIndex = g.e < 0.98 ? '1' : '';
+          if (veil) veil.style.opacity = (0.55 * g.x).toFixed(3);
+        });
+      }
+      this.galLoop = requestAnimationFrame(galStep);
+    };
+    this.galLoop = requestAnimationFrame(galStep);
     this.mq = window.matchMedia('(max-width: 640px)'); this.onMq = () => this.setState({ mob: this.mq.matches }); this.onMq(); this.mq.addEventListener('change', this.onMq);
     this.startTimer();
     this.onKey = e => { if (this.state.cat >= 0 && e.key === 'Escape') this.setCat(-1); };
@@ -566,9 +640,24 @@ class Component extends DCLogic {
     this.onScroll();
   }
   componentDidUpdate() { this.inqDone = false; this.onScroll && this.onScroll(); }
-  componentWillUnmount() { this.mq && this.mq.removeEventListener('change', this.onMq); window.removeEventListener('keydown', this.onKey); clearInterval(this.timer); cancelAnimationFrame(this.loop); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('resize', this.onScroll); }
+  componentWillUnmount() { this.mq && this.mq.removeEventListener('change', this.onMq); window.removeEventListener('keydown', this.onKey); clearInterval(this.timer); cancelAnimationFrame(this.loop); cancelAnimationFrame(this.galLoop); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('resize', this.onScroll); }
+  pack() {
+    const root = this.catRef.current; if (!root || this.packing || this.state.packed) return; this.packing = true; this.galDone = true;
+    const old = {};
+    root.querySelectorAll('[data-mk]').forEach(el => { const r = el.firstElementChild.getBoundingClientRect(); if (r.height) old[el.getAttribute('data-mk')] = r; });
+    this.setState({ packed: true }, () => requestAnimationFrame(() => {
+      const els = root.querySelectorAll('[data-pk]');
+      els.forEach(el => { const o = old[el.getAttribute('data-pk')], n = el.getBoundingClientRect(); el.style.transition = 'none';
+        if (o && n.width) el.style.transform = 'translate(' + (o.left - n.left) + 'px,' + (o.top - n.top) + 'px) scale(' + (o.width / n.width) + ',' + (o.height / n.height) + ')';
+        else el.style.opacity = '0'; });
+      root.offsetHeight;
+      requestAnimationFrame(() => { els.forEach(el => { el.style.transition = 'transform 1.2s cubic-bezier(.22,.8,.2,1), opacity .8s ease'; el.style.transform = ''; el.style.opacity = ''; }); this.packing = false; });
+    }));
+  }
   setCat(i) {
-    this.setState({ cat: i });
+    this.setState({ cat: i, packed: false }); this.galDone = false; this.galBottom = false;
+    if (this.catRef.current) this.catRef.current.querySelectorAll('[data-pk]').forEach(el => { el.style.transform = ''; el.style.opacity = ''; el.style.transition = ''; });
+    if (this.catRef.current) this.catRef.current.querySelectorAll('[data-gal]').forEach(el => { el._g = null; });
     document.body.style.overflow = i >= 0 ? 'hidden' : '';
     if (this.catRef.current) this.catRef.current.scrollTop = 0;
   }
@@ -592,10 +681,8 @@ class Component extends DCLogic {
       const items = [];
       for (let n = 1; n <= 25; n++) { const id = 'cat' + (k + 1) + '-' + n, src = M['img:' + id]; if (src) items.push({ id, src, view: M['view:' + id] || '', hz: M['shape:' + id] === 'h' }); }
       if (!items.length) for (let n = 1; n <= 25; n++) items.push({ id: 'ph' + (k + 1) + '-' + n, src: '', view: '', hz: n % 5 === 3 });
-      const cols = this.state.mob ? 2 : (M['cols:cat' + (k + 1)] === '3' ? 3 : 2);
-      const rows = [];
-      for (let r = 0; r * cols < items.length; r++) rows.push({ items: layRow(items.slice(r * cols, r * cols + cols), cols, r) });
-      return { display: k === this.state.cat ? 'flex' : 'none', rows, empty: false };
+      const on = k === this.state.cat, pk = !!this.state.packed;
+      return { pdisplay: on && pk ? 'flex' : 'none', packRows: layPack(items, this.state.mob, k), display: on && !pk ? 'flex' : 'none', bands: layMosaic(items, this.state.mob, [1, 2, 3, 4].map(j => M['txt:gal.' + (k + 1) + '.' + j] ?? GAL_TXT[j - 1]), k), cols: this.state.mob ? 4 : 6, empty: false };
     });
     IMGS.forEach((_, i) => { v['open' + i] = open(i); });
     v.bWords = ((window.NON_CMS || {})['txt:bts'] || 'At NON STUDIO, these are our starting points. Through conversation, thoughtful styling, and a considered approach to light and composition, we create photographs that feel personal to you.').split(/\s+/).filter(Boolean);

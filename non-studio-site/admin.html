@@ -127,15 +127,6 @@ input,select,textarea,button{font:inherit;color:inherit}
               <h2 style="margin:0;font-family:'Times New Roman',Times,serif;font-weight:400;text-transform:uppercase;letter-spacing:-0.05em;font-size:clamp(26px,3vw,40px);line-height:0.9">{{ g.title }}</h2>
               <span style="font-family:'Courier Prime',monospace;font-size:13px;color:#6b665d">{{ g.note }}</span>
             </div>
-            <sc-if value="{{ g.isCat }}" hint-placeholder-val="{{ false }}">
-              <div style="display:flex;align-items:center;gap:10px;font-family:'Courier Prime',monospace;font-size:12px;letter-spacing:0.06em">
-                <span style="margin-right:6px">PHOTOS PER ROW</span>
-                <sc-for list="{{ g.colOpts }}" as="co" hint-placeholder-count="2">
-                  <button onClick="{{ co.pick }}" style="min-width:40px;min-height:34px;border:1px solid {{ co.border }};background:{{ co.bg }};color:{{ co.color }};cursor:pointer;font-family:'Courier Prime',monospace;font-size:13px">{{ co.label }}</button>
-                </sc-for>
-                <span style="margin-left:8px;color:#6b665d">Desktop · mobile always shows 2</span>
-              </div>
-            </sc-if>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({{ g.min }},1fr));gap:18px">
               <sc-for list="{{ g.slots }}" as="s" hint-placeholder-count="5">
                 <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
@@ -242,7 +233,7 @@ const GROUPS = [
   { title: 'Home · Slideshow · Desktop', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '16/9', crop: 16 / 9, min: '240px', slots: HERO.map((k, i) => ({ id: 'hero-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
   { title: 'Home · Slideshow · Mobile', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '9/19.5', crop: 9 / 19.5, min: '130px', slots: HERO.map((k, i) => ({ id: 'hero-m-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
   { title: 'Category covers', note: 'Shown on the home page · Adjust to set the crop', ratio: '4/5', crop: 0.8, min: '170px', slots: CATS.map((c, i) => ({ id: 'cover-' + (i + 1), def: I[i + 1], label: c, cat: i, ratio: CRS[i], crop: CR[i] })) }
-].concat(CATS.map((c, i) => ({ title: c, cat: i, isCat: true, note: 'Category gallery · up to 25 · V = vertical, H = horizontal', ratio: '4/5', crop: 0.8, min: '150px', slots: Array.from({ length: 25 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', gal: true, label: String(j + 1).padStart(2, '0') })) })), [
+].concat(CATS.map((c, i) => ({ title: c, cat: i, isCat: true, note: 'Category gallery · up to 25 · mosaic layout · V = vertical, H = horizontal', ratio: '4/5', crop: 0.8, min: '150px', slots: Array.from({ length: 25 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', gal: true, label: String(j + 1).padStart(2, '0') })) })), [
   { title: 'Book spread', note: 'Shown in black & white', ratio: '4/5', crop: 0.8, min: '170px', slots: [{ id: 'book-photo', def: I[0], label: 'Right page' }] },
   { title: 'About', note: 'Photographer portrait', ratio: '4/5', crop: 0.8, min: '170px', slots: [{ id: 'about-portrait', def: '', label: 'Portrait' }] }
 ]);
@@ -264,7 +255,7 @@ const TEXTS = [
   { k: 'txt:about.name', label: 'ABOUT · NAME', def: 'Photographer Name', rows: 1 },
   { k: 'txt:about.bio', label: 'ABOUT · BIO', def: 'Photographer bio goes here.', rows: 8 },
   { k: 'url:instagram', label: 'INSTAGRAM LINK (FOOTER · NON STUDIO)', def: 'https://instagram.com', rows: 1 }
-];
+].concat(CATS.flatMap((c, i) => ['Light first, then the person in it.', 'Shot on location · natural light · minimal retouching', 'Every frame begins with a conversation.', 'Selected frames, 2024 — 2026'].map((d, j) => ({ k: 'txt:gal.' + (i + 1) + '.' + (j + 1), label: 'GALLERY · ' + String(c).toUpperCase() + ' · TEXT ' + (j + 1) + (['  (large)', '  (small)', '  (italic)', '  (caps)'][j]) + ' · leave empty to hide', def: d, rows: 2 }))));
 const STATUSES = ['new', 'replied', 'booked', 'archived'];
 const SC = { new: '#a8352a', replied: '#6b665d', booked: '#161513', archived: '#a39a88' };
 const fmt = iso => { const d = new Date(iso); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); };
