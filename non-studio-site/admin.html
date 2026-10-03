@@ -127,6 +127,15 @@ input,select,textarea,button{font:inherit;color:inherit}
               <h2 style="margin:0;font-family:'Times New Roman',Times,serif;font-weight:400;text-transform:uppercase;letter-spacing:-0.05em;font-size:clamp(26px,3vw,40px);line-height:0.9">{{ g.title }}</h2>
               <span style="font-family:'Courier Prime',monospace;font-size:13px;color:#6b665d">{{ g.note }}</span>
             </div>
+            <sc-if value="{{ g.isCat }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:10px;font-family:'Courier Prime',monospace;font-size:12px;letter-spacing:0.06em">
+                <span style="margin-right:6px">PHOTOS PER ROW</span>
+                <sc-for list="{{ g.colOpts }}" as="co" hint-placeholder-count="2">
+                  <button onClick="{{ co.pick }}" style="min-width:40px;min-height:34px;border:1px solid {{ co.border }};background:{{ co.bg }};color:{{ co.color }};cursor:pointer;font-family:'Courier Prime',monospace;font-size:13px">{{ co.label }}</button>
+                </sc-for>
+                <span style="margin-left:8px;color:#6b665d">Desktop · mobile always shows 2</span>
+              </div>
+            </sc-if>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({{ g.min }},1fr));gap:18px">
               <sc-for list="{{ g.slots }}" as="s" hint-placeholder-count="5">
                 <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
@@ -138,7 +147,16 @@ input,select,textarea,button{font:inherit;color:inherit}
                       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Courier Prime',monospace;font-size:12px;color:#8a8375">Empty</div>
                     </sc-if>
                   </div>
-                  <span style="font-family:'Courier Prime',monospace;font-size:12px;color:#4a463f">{{ s.label }}</span>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                    <span style="font-family:'Courier Prime',monospace;font-size:12px;color:#4a463f">{{ s.label }}</span>
+                    <sc-if value="{{ s.isGal }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;gap:4px">
+                        <sc-for list="{{ s.shapeOpts }}" as="so" hint-placeholder-count="2">
+                          <button onClick="{{ so.pick }}" title="{{ so.title }}" style="min-width:30px;height:26px;border:1px solid {{ so.border }};background:{{ so.bg }};color:{{ so.color }};cursor:pointer;font-family:'Courier Prime',monospace;font-size:11px;padding:0 6px">{{ so.label }}</button>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
                   <div style="display:flex;gap:14px;align-items:center;font-size:14px;font-weight:600">
                     <label style="cursor:pointer;border-bottom:1px solid #161513">{{ s.action }}<input type="file" accept="image/*" onChange="{{ s.onFile }}" style="display:none"></label>
                     <sc-if value="{{ s.canCrop }}" hint-placeholder-val="{{ false }}">
@@ -224,7 +242,7 @@ const GROUPS = [
   { title: 'Home · Slideshow · Desktop', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '16/9', crop: 16 / 9, min: '240px', slots: HERO.map((k, i) => ({ id: 'hero-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
   { title: 'Home · Slideshow · Mobile', note: 'Up to 8 · empty slides are skipped · Adjust to set the crop', ratio: '9/19.5', crop: 9 / 19.5, min: '130px', slots: HERO.map((k, i) => ({ id: 'hero-m-' + (i + 1), def: I[k] || '', label: 'Slide 0' + (i + 1) })) },
   { title: 'Category covers', note: 'Shown on the home page · Adjust to set the crop', ratio: '4/5', crop: 0.8, min: '170px', slots: CATS.map((c, i) => ({ id: 'cover-' + (i + 1), def: I[i + 1], label: c, cat: i, ratio: CRS[i], crop: CR[i] })) }
-].concat(CATS.map((c, i) => ({ title: c, cat: i, note: 'Category gallery · up to 12', ratio: '4/5', crop: 0.8, min: '150px', slots: Array.from({ length: 12 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', label: String(j + 1).padStart(2, '0') })) })), [
+].concat(CATS.map((c, i) => ({ title: c, cat: i, isCat: true, note: 'Category gallery · up to 25 · V = vertical, H = horizontal', ratio: '4/5', crop: 0.8, min: '150px', slots: Array.from({ length: 25 }, (_, j) => ({ id: 'cat' + (i + 1) + '-' + (j + 1), def: '', gal: true, label: String(j + 1).padStart(2, '0') })) })), [
   { title: 'Book spread', note: 'Shown in black & white', ratio: '4/5', crop: 0.8, min: '170px', slots: [{ id: 'book-photo', def: I[0], label: 'Right page' }] },
   { title: 'About', note: 'Photographer portrait', ratio: '4/5', crop: 0.8, min: '170px', slots: [{ id: 'about-portrait', def: '', label: 'Portrait' }] }
 ]);
@@ -397,12 +415,17 @@ class Component extends DCLogic {
         const ok = isDefault ? (s.content[key] ? await this.dropKey(key) : true) : await this.putKey(key, c.s.toFixed(3) + ' ' + x.toFixed(2) + ' ' + y.toFixed(2));
         if (ok) { this.setState({ crop: null }); this.flash('Crop saved'); }
       },
-      groups: GROUPS.map(g => { const gt = g.cat != null ? catName(g.cat) : g.title; return { ...g, title: gt, slots: g.slots.map(sl => {
+      groups: GROUPS.map(g => { const gt = g.cat != null ? catName(g.cat) : g.title;
+        const ck = 'cols:cat' + (g.cat + 1), cols = s.content[ck] === '3' ? 3 : 2;
+        const colOpts = g.isCat ? [2, 3].map(n => ({ label: String(n), bg: n === cols ? '#1d1a16' : 'transparent', color: n === cols ? '#f3f1ec' : '#161513', border: n === cols ? '#1d1a16' : '#cfc9bd', pick: async () => { if (n !== cols && await (n === 2 ? this.dropKey(ck) : this.putKey(ck, '3'))) this.flash(n + ' per row'); } })) : [];
+        return { ...g, title: gt, colOpts, isCat: !!g.isCat, slots: g.slots.map(sl => {
         const key = 'img:' + sl.id, cur = s.content[key] || sl.def, busy = !!s.busy[sl.id];
-        const view = parseView(s.content['view:' + sl.id]), nr = this.nat[cur], A = sl.crop || g.crop;
+        const sk = 'shape:' + sl.id, hz = sl.gal && s.content[sk] === 'h';
+        const view = parseView(s.content['view:' + sl.id]), nr = this.nat[cur], A = hz ? 1.5 : (sl.crop || g.crop);
+        const shapeOpts = sl.gal ? [['V', false, 'Vertical'], ['H', true, 'Horizontal']].map(([label, h, title]) => ({ label, title, bg: h === hz ? '#1d1a16' : 'transparent', color: h === hz ? '#f3f1ec' : '#161513', border: h === hz ? '#1d1a16' : '#cfc9bd', pick: async () => { if (h !== hz && await (h ? this.putKey(sk, 'h') : this.dropKey(sk))) { if (s.content['view:' + sl.id]) await this.dropKey('view:' + sl.id); this.flash(title); } } })) : [];
         const lab = sl.cat != null ? catName(sl.cat) : sl.label;
         const fb = fitBox(nr, A, view);
-        return { l: fb.l, t: fb.t, w: fb.w, h: fb.h, ratio: sl.ratio || g.ratio,
+        return { l: fb.l, t: fb.t, w: fb.w, h: fb.h, ratio: hz ? '3/2' : (sl.ratio || g.ratio), isGal: !!sl.gal, shapeOpts,
           onLoad: e => { const im = e.target; if (im.naturalWidth && !this.nat[cur]) { this.nat[cur] = im.naturalWidth / im.naturalHeight; this.forceUpdate(); } },
           canCrop: !!cur && !busy, cropLabel: s.content['view:' + sl.id] ? 'Adjust ●' : 'Adjust',
           onCrop: () => this.setState({ crop: { id: sl.id, src: cur, A, r: this.nat[cur] || null, title: gt.replace('Home · ', '') + ' · ' + lab, ...view } }),

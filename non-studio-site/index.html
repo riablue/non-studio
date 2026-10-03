@@ -298,13 +298,17 @@ input,select,textarea,button{font:inherit}
     <div style="padding:clamp(40px,7vw,96px) clamp(20px,4vw,56px) clamp(64px,9vw,120px);display:flex;flex-direction:column;gap:clamp(40px,6vw,80px)">
       <h2 style="margin:0;font-family:'Times New Roman',Times,serif;font-weight:400;text-transform:uppercase;letter-spacing:-0.055em;font-size:clamp(44px,8vw,128px);line-height:0.88">{{ cat.title }}</h2>
       <sc-for list="{{ catPages }}" as="cp" hint-placeholder-count="1">
-        <div style="display:{{ cp.display }};flex-direction:column;gap:clamp(16px,2vw,28px)">
-          <div style="width:100%;height:min(88vh,62vw);position:relative"><image-slot id="{{ cp.coverId }}" src="{{ cp.src }}" shape="rect" mask="inset(0)" style="pointer-events:none"></image-slot></div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:clamp(16px,2vw,28px)">
-            <sc-for list="{{ cp.slots }}" as="sl" hint-placeholder-count="6">
-              <div style="aspect-ratio:4/5;position:relative"><image-slot id="{{ sl.id }}" shape="rect" mask="inset(0)" placeholder="{{ sl.ph }}" style="pointer-events:none"></image-slot></div>
-            </sc-for>
-          </div>
+        <div style="display:{{ cp.display }};flex-direction:column;gap:clamp(48px,8vw,120px)">
+          <sc-for list="{{ cp.rows }}" as="row" hint-placeholder-count="2">
+            <div style="display:flex;align-items:flex-start">
+              <sc-for list="{{ row.items }}" as="it" hint-placeholder-count="2">
+                <div style="flex:0 0 auto;width:{{ it.w }};margin-left:{{ it.ml }};margin-top:{{ it.mt }};aspect-ratio:{{ it.ratio }};position:relative"><image-slot id="{{ it.id }}" src="{{ it.src }}" view="{{ it.view }}" shape="rect" mask="inset(0)" style="pointer-events:none"></image-slot></div>
+              </sc-for>
+            </div>
+          </sc-for>
+          <sc-if value="{{ cp.empty }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-family:'Courier Prime',ui-monospace,monospace;font-size:14px;color:#6b665d">Photos coming soon.</p>
+          </sc-if>
         </div>
       </sc-for>
       <button onClick="{{ nextCat }}" style="align-self:flex-end;display:flex;flex-direction:column;align-items:flex-end;gap:6px;background:none;border:0;cursor:pointer;color:#161513;padding:0">
@@ -335,6 +339,18 @@ const CATS = [
   { title: 'Couples', src: IMGS[4], pos: '50% 30%' },
   { title: 'Personal Portrait', src: IMGS[5], pos: '30% 40%' }
 ];
+const PAT = {
+  2: [{ w: [46, 27], ml: [0, 18], mt: ['0px', '0px'] }, { w: [26, 42], ml: [8, 16], mt: ['0px', '14vw'] }],
+  3: [{ w: [30, 20, 25], ml: [0, 8, 9], mt: ['0px', '10vw', '4vw'] }, { w: [22, 30, 22], ml: [6, 8, 8], mt: ['6vw', '0px', '12vw'] }]
+};
+function layRow(its, cols, r) {
+  const p = PAT[cols][r % 2], n = its.length;
+  let w = its.map((it, i) => p.w[i] * (it.hz ? 1.55 : 1)), ml = p.ml.slice(0, n);
+  const ws = w.reduce((a, b) => a + b, 0), avail = 100 - 4 * (n - 1);
+  if (ws > avail) { w = w.map(x => x * avail / ws); ml = ml.map((_, i) => i ? 4 : 0); }
+  else { const free = 100 - ws, ms = ml.reduce((a, b) => a + b, 0); if (ms > free) ml = ml.map(x => x * free / ms); }
+  return its.map((it, i) => ({ id: it.id, src: it.src, view: it.view, ratio: it.hz ? '3/2' : '4/5', w: w[i].toFixed(2) + '%', ml: ml[i].toFixed(2) + '%', mt: p.mt[i] }));
+}
 const catT = i => ((window.NON_CMS || {})['txt:cat.' + (i + 1)] || CATS[i].title);
 const WD = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -571,8 +587,15 @@ class Component extends DCLogic {
     const ci = Math.max(0, this.state.cat);
     v.cat = Object.assign({ num: '0' + (ci + 1) }, CATS[ci], { title: catT(ci) });
     v.nextTitle = catT((ci + 1) % CATS.length);
-    v.catPages = CATS.map((c, k) => ({ display: k === this.state.cat ? 'flex' : 'none', coverId: 'cover-' + (k + 1), src: c.src,
-      slots: Array.from({ length: 12 }, (_, j) => j + 1).map(n => ({ id: 'cat' + (k + 1) + '-' + n, ph: 'Upload in Admin' })) }));
+    const M = window.NON_CMS || {};
+    v.catPages = CATS.map((c, k) => {
+      const items = [];
+      for (let n = 1; n <= 25; n++) { const id = 'cat' + (k + 1) + '-' + n, src = M['img:' + id]; if (src) items.push({ id, src, view: M['view:' + id] || '', hz: M['shape:' + id] === 'h' }); }
+      const cols = this.state.mob ? 2 : (M['cols:cat' + (k + 1)] === '3' ? 3 : 2);
+      const rows = [];
+      for (let r = 0; r * cols < items.length; r++) rows.push({ items: layRow(items.slice(r * cols, r * cols + cols), cols, r) });
+      return { display: k === this.state.cat ? 'flex' : 'none', rows, empty: !items.length };
+    });
     IMGS.forEach((_, i) => { v['open' + i] = open(i); });
     v.bWords = ((window.NON_CMS || {})['txt:bts'] || 'At NON STUDIO, these are our starting points. Through conversation, thoughtful styling, and a considered approach to light and composition, we create photographs that feel personal to you.').split(/\s+/).filter(Boolean);
     v.open5Pre = () => { if ((this.ex || 0) < 0.1) this.setCat(5); };
