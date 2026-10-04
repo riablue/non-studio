@@ -365,14 +365,14 @@ const CATS = [
 ];
 const GAL_TXT = ['Light first, then the person in it.', 'Shot on location · natural light · minimal retouching', 'Every frame begins with a conversation.', 'Selected frames, 2024 — 2026'];
 const BANDS = {
-  d: [[[1, 1, 0, 0], [4, 2, 1, 0], [6, 1, 0, 2]], [[1, 2, 1, 0], [3, 1, 0, 0], [6, 1, 0, 5]], [[3, 1, 0, 3], [4, 1, 0, 0], [5, 2, 1, 0]], [[1, 2, 1, 0], [4, 1, 0, 1]]],
+  d: [[[1, 3, 0, 0], [6, 4, 1, 0], [10, 3, 0, 4]], [[1, 4, 1, 0], [6, 3, 0, 5]], [[4, 3, 0, 3], [8, 4, 1, 0]], [[2, 3, 0, 0], [5, 4, 1, 4]]],
   m: [[[1, 3, 1, 0]], [[1, 2, 0, 0], [3, 2, 0, 16]], [[2, 3, 1, 0]], [[1, 2, 0, 10], [3, 2, 0, 0]]]
 };
-const TXT_D = [['2 / span 2', '0vw'], ['4 / span 2', '6vw'], ['1 / span 2', '9vw'], ['5 / span 2', '3vw']];
+const TXT_D = [['4 / span 2', '2vw'], ['10 / span 3', '6vw'], ['1 / span 3', '9vw'], ['10 / span 3', '3vw']];
 const TXT_M = [['1 / span 3', '0vw'], ['2 / span 3', '0vw'], ['1 / span 2', '0vw'], ['3 / span 2', '0vw']];
 const SP = [0.12, -0.08, 0.22, -0.14, 0.06, 0.26, -0.1, 0.16, -0.18, 0.1, 0.2];
 function layMosaic(items, mob, texts, k) {
-  k = k || 0; const P = BANDS[mob ? 'm' : 'd'], bands = [], N = mob ? 4 : 6, flip = k % 2 === 1; let i = 0, b = 0;
+  k = k || 0; const P = BANDS[mob ? 'm' : 'd'], bands = [], N = mob ? 4 : 12, flip = k % 2 === 1; let i = 0, b = 0;
   const C = (c, s) => (flip ? N - (c + s - 1) + 1 : c) + ' / span ' + s;
   const CT = str => { const m = str.match(/(\d+) \/ span (\d+)/); return C(+m[1], +m[2]); };
   const mkT = (t, j, pos) => { const st = (j + k) % 4; return { text: t, col: CT(pos[0]), mt: pos[1], s0: st === 0, s1: st === 1, s2: st === 2, s3: st === 3, sp: String(SP[(j * 3 + 4 + k) % SP.length] * 0.6) }; };
@@ -387,16 +387,15 @@ function layMosaic(items, mob, texts, k) {
   }
   return bands;
 }
-const PACK = { d: [[50, 50], [30, 40, 30], [45, 55], [34, 33, 33]], m: [[50, 50], [58, 42], [42, 58]] };
+const PACK = { d: [2, 3, 2, 3], m: [2, 2] };
 function layPack(items, mob, k) {
   k = k || 0; const P = PACK[mob ? 'm' : 'd'], rows = []; let i = 0, r = k;
-  while (i < items.length) { const ws = P[r % P.length], row = [];
-    for (const w of ws) { if (i >= items.length) break; const it = items[i++]; row.push({ key: it.id, pid: 'pk-' + it.id, src: it.src, view: it.view, w: w + '%', ratio: it.hz ? '3/2' : '4/5' }); }
-    if (row.length < ws.length) { const tot = ws.slice(0, row.length).reduce((a, b) => a + b, 0); row.forEach((x, j) => { x.w = (ws[j] * 100 / tot).toFixed(2) + '%'; }); }
-    rows.push({ items: row }); r++; }
+  while (i < items.length) { const row = items.slice(i, i + P[r % P.length]); i += row.length;
+    const ar = row.map(it => it.hz ? 1.5 : 0.8), tot = ar.reduce((a, b) => a + b, 0);
+    rows.push({ items: row.map((it, j) => ({ key: it.id, pid: 'pk-' + it.id, src: it.src, view: it.view, w: (ar[j] * 100 / tot).toFixed(3) + '%', ratio: it.hz ? '3/2' : '4/5' })) }); r++; }
   return rows;
 }
-const catT = i => ((window.NON_CMS || {})['txt:cat.' + (i + 1)] || CATS[i].title);
+const catT = i => ((window.NON_CMS || {})['txt:cat.' + (i + 1)] || (CATS[i] || CATS[0]).title);
 const WD = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -682,11 +681,11 @@ class Component extends DCLogic {
       for (let n = 1; n <= 25; n++) { const id = 'cat' + (k + 1) + '-' + n, src = M['img:' + id]; if (src) items.push({ id, src, view: M['view:' + id] || '', hz: M['shape:' + id] === 'h' }); }
       if (!items.length) for (let n = 1; n <= 25; n++) items.push({ id: 'ph' + (k + 1) + '-' + n, src: '', view: '', hz: n % 5 === 3 });
       const on = k === this.state.cat, pk = !!this.state.packed;
-      return { pdisplay: on && pk ? 'flex' : 'none', packRows: layPack(items, this.state.mob, k), display: on && !pk ? 'flex' : 'none', bands: layMosaic(items, this.state.mob, [1, 2, 3, 4].map(j => M['txt:gal.' + (k + 1) + '.' + j] ?? GAL_TXT[j - 1]), k), cols: this.state.mob ? 4 : 6, empty: false };
+      return { pdisplay: on && pk ? 'flex' : 'none', packRows: layPack(items, this.state.mob, k), display: on && !pk ? 'flex' : 'none', bands: layMosaic(items, this.state.mob, [1, 2, 3, 4].map(j => M['txt:gal.' + (k + 1) + '.' + j] ?? GAL_TXT[j - 1]), k), cols: this.state.mob ? 4 : 12, empty: false };
     });
     IMGS.forEach((_, i) => { v['open' + i] = open(i); });
     v.bWords = ((window.NON_CMS || {})['txt:bts'] || 'At NON STUDIO, these are our starting points. Through conversation, thoughtful styling, and a considered approach to light and composition, we create photographs that feel personal to you.').split(/\s+/).filter(Boolean);
-    v.open5Pre = () => { if ((this.ex || 0) < 0.1) this.setCat(5); };
+    v.open5Pre = () => { if ((this.ex || 0) < 0.1) this.setCat(4); };
     v.btsVideo = BTS_VIDEO ? React.createElement('video', { src: BTS_VIDEO, muted: true, loop: true, playsInline: true, 'data-bts': '1', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', background: '#161513' } }) : null; v.noBts = !BTS_VIDEO;
     v.workOpen = !!this.state.workOpen && !this.state.mob;
     v.workRef = this.workRef || (this.workRef = React.createRef());
