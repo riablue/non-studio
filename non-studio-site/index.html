@@ -385,11 +385,12 @@ function layMosaic(items, mob, texts, k) {
   return bands;
 }
 const PACK = { d: [2, 3, 2, 3], m: [2, 2] };
+const PK_V = [0.8, 0.66, 0.75, 0.56, 0.7, 0.85], PK_H = [1.5, 1.33, 1.78, 1.25];
 function layPack(items, mob, k) {
   k = k || 0; const P = PACK[mob ? 'm' : 'd'], rows = []; let i = 0, r = k;
   while (i < items.length) { const row = items.slice(i, i + P[r % P.length]); i += row.length;
-    const ar = row.map(it => it.hz ? 1.5 : 0.8), tot = ar.reduce((a, b) => a + b, 0);
-    rows.push({ items: row.map((it, j) => ({ key: it.id, pid: 'pk-' + it.id, src: it.src, view: it.view, w: (ar[j] * 100 / tot).toFixed(3) + '%', ratio: it.hz ? '3/2' : '4/5' })) }); r++; }
+    const ar = row.map((it, j) => { const h = (i - row.length + j) * 7 + k * 3 + r * 5; return it.hz ? PK_H[h % PK_H.length] : PK_V[h % PK_V.length]; }), tot = ar.reduce((a, b) => a + b, 0);
+    rows.push({ items: row.map((it, j) => ({ key: it.id, pid: 'pk-' + it.id, src: it.src, view: it.view, w: (ar[j] * 100 / tot).toFixed(3) + '%', ratio: ar[j] + '/1' })) }); r++; }
   return rows;
 }
 const catT = i => ((window.NON_CMS || {})['txt:cat.' + (i + 1)] || (CATS[i] || CATS[0]).title);
@@ -462,7 +463,7 @@ class Component extends DCLogic {
     const galStep = () => {
       const root = this.catRef.current;
       if (root) { const vh = root.clientHeight, vw = root.clientWidth, L = 0.1;
-        if (!this.state.packed) { if (root.scrollTop > 0 && root.scrollTop + vh >= root.scrollHeight - 4) { this.galBottom = true; this.galBT = root.scrollTop; } else if (this.galBottom && root.scrollTop < this.galBT - 24) this.pack(); }
+        if (!this.state.packed) { if (root.scrollTop > 0 && root.scrollTop + vh >= root.scrollHeight - 4) { this.galBottom = true; this.galBT = root.scrollTop; } else if (this.galBottom && root.scrollTop < this.galBT - (this.state.mob ? 60 : 24)) this.pack(); }
         const still = this.reduce || this.galDone;
         const now = performance.now(); let qi = 0;
         root.querySelectorAll('[data-gal]').forEach(el => { const r = el.getBoundingClientRect(); if (!r.height) return;
@@ -606,9 +607,9 @@ class Component extends DCLogic {
           lg.style.transform = this.btsDark ? 'translateX(' + ((lg.parentElement.clientWidth - lg.offsetWidth) / 2 - lg.offsetLeft).toFixed(1) + 'px)' : ''; }
         const sk = exs.querySelector('[data-m=bts-sticky]');
         if (sk) { const out = blk && fr && r.bottom < vh2 - 1, cut = fr ? fr.offsetTop + fr.offsetHeight : 0;
-          sk.style.transition = 'background-color .6s ease'; sk.style.backgroundColor = blk && !out ? '#000' : '';
-          sk.style.backgroundImage = out ? 'linear-gradient(#000 0, #000 ' + cut + 'px, transparent ' + cut + 'px)' : ''; }
-        if (hint) { const hc = blk ? '#f3f1ec' : '#161513'; hint.style.color = hc; const ar2 = hint.querySelector('[data-ex-arrow]'); if (ar2) ar2.style.borderTopColor = hc; }
+          sk.style.transition = 'background-color .6s ease'; sk.style.backgroundColor = blk && !out ? '#f3f1ec' : '';
+          sk.style.backgroundImage = out ? 'linear-gradient(#f3f1ec 0, #f3f1ec ' + cut + 'px, transparent ' + cut + 'px)' : ''; }
+        if (hint) { const hc = '#161513'; hint.style.color = hc; const ar2 = hint.querySelector('[data-ex-arrow]'); if (ar2) ar2.style.borderTopColor = hc; }
         const v = exs.querySelector('video[data-bts]');
         if (v) { if (vo > 0.5 && r.bottom > 0 && v.paused) v.play().catch(() => {}); else if ((vo <= 0.5 || r.bottom <= 0) && !v.paused) v.pause(); }
       }
@@ -653,14 +654,18 @@ class Component extends DCLogic {
     const root = this.catRef.current; if (!root || this.packing || this.state.packed) return; this.packing = true; this.galDone = true;
     const old = {};
     root.querySelectorAll('[data-mk]').forEach(el => { const r = el.firstElementChild.getBoundingClientRect(); if (r.height) old[el.getAttribute('data-mk')] = r; });
-    this.setState({ packed: true }, () => requestAnimationFrame(() => {
+    const rr = root.getBoundingClientRect(), mid = rr.top + rr.height / 2; let ak = null, ad = 1e9;
+    for (const k in old) { const d = Math.abs(old[k].top + old[k].height / 2 - mid); if (d < ad) { ad = d; ak = k; } }
+    this.setState({ packed: true }, () => {
       const els = root.querySelectorAll('[data-pk]');
+      const an = ak && root.querySelector('[data-pk="' + ak + '"]');
+      if (an) { const nr = an.getBoundingClientRect(); root.scrollTop += (nr.top + nr.height / 2) - (old[ak].top + old[ak].height / 2); }
       els.forEach(el => { const o = old[el.getAttribute('data-pk')], n = el.getBoundingClientRect(); el.style.transition = 'none';
         if (o && n.width) el.style.transform = 'translate(' + (o.left - n.left) + 'px,' + (o.top - n.top) + 'px) scale(' + (o.width / n.width) + ',' + (o.height / n.height) + ')';
         else el.style.opacity = '0'; });
       root.offsetHeight;
       requestAnimationFrame(() => { els.forEach(el => { el.style.transition = 'transform 1.2s cubic-bezier(.22,.8,.2,1), opacity .8s ease'; el.style.transform = ''; el.style.opacity = ''; }); this.packing = false; });
-    }));
+    });
   }
   setCat(i) {
     this.setState({ cat: i, packed: false }); this.galDone = false; this.galBottom = false;
