@@ -271,6 +271,7 @@ const TEXTS = [
   { k: 'txt:cat.4', label: 'CATEGORY 04 · NAME', def: 'Couples', rows: 1 },
   { k: 'txt:cat.5', label: 'CATEGORY 05 · NAME', def: 'Personal Portrait', rows: 1 },
   { k: 'txt:hero.tagline', label: 'HOME · HERO TAGLINE', def: 'Photography shaped around your vision.', rows: 2 },
+  { k: 'url:instagram', label: 'INSTAGRAM LINK', def: 'https://instagram.com', rows: 1 },
   { k: 'txt:hero.title', label: 'HOME · HERO HEADLINE', def: 'For the way you dream', rows: 2 },
   { k: 'txt:mood', label: 'HOME · ITALIC QUOTE', def: 'a mood you want to explore, a story you want to tell, a side of yourself you haven’t seen before.', rows: 3 },
   { k: 'txt:bts', label: 'HOME · PERSONAL PORTRAIT PARAGRAPH', def: 'At NON STUDIO, these are our starting points. Through conversation, thoughtful styling, and a considered approach to light and composition, we create photographs that feel personal to you.', rows: 4 },
@@ -280,8 +281,7 @@ const TEXTS = [
   { k: 'txt:contact.lead1', label: 'CONTACT · LINE 1', def: 'Tell us what you have in mind. We’ll help with the rest.', rows: 2 },
   { k: 'txt:contact.lead2', label: 'CONTACT · LINE 2', def: 'Choose your preferences below to start a conversation.', rows: 2 },
   { k: 'txt:about.name', label: 'ABOUT · NAME', def: 'Photographer Name', rows: 1 },
-  { k: 'txt:about.bio', label: 'ABOUT · BIO', def: 'Photographer bio goes here.', rows: 8 },
-  { k: 'url:instagram', label: 'INSTAGRAM LINK (FOOTER · NON STUDIO)', def: 'https://instagram.com', rows: 1 }
+  { k: 'txt:about.bio', label: 'ABOUT · BIO', def: 'Photographer bio goes here.', rows: 8 }
 ].concat(CATS.flatMap((c, i) => ['Light first, then the person in it.', 'Shot on location · natural light · minimal retouching', 'Every frame begins with a conversation.', 'Selected frames, 2024 — 2026'].map((d, j) => ({ k: 'txt:gal.' + (i + 1) + '.' + (j + 1), label: 'GALLERY · ' + String(c).toUpperCase() + ' · TEXT ' + (j + 1) + (['  (large)', '  (small)', '  (italic)', '  (caps)'][j]) + ' · leave empty to hide', def: d, rows: 2 }))));
 const STATUSES = ['new', 'replied', 'booked', 'archived'];
 const SC = { new: '#a8352a', replied: '#6b665d', booked: '#161513', archived: '#a39a88' };
