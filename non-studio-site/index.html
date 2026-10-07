@@ -11,8 +11,8 @@
 <helmet>
 <script src="./config.js"></script>
 <script src="./cms.js"></script>
-<link rel="icon" type="image/png" href="./assets/favicon.png">
-<link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="./assets/favicon-yume.png">
+<link rel="apple-touch-icon" href="./assets/touch-icon-yume.png">
 <script src="./image-slot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Great+Vibes&family=Archivo+Narrow:wght@400;500;600;700&family=Rock+Salt&family=Share+Tech+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -474,9 +474,9 @@ class Component extends DCLogic {
           const e = still ? 1 : gEase(gCl((vh - r.top) / (vh * 0.55)));
           const x = still ? 0 : gCl((vh * 0.4 - r.bottom) / (vh * 0.4));
           const py = still ? 0 : -((r.top + r.height / 2) - vh / 2) * sp;
-          const g = el._g || (el._g = { e: 0, x, py, t0: now + (r.top < vh ? qi++ : 0) * 160 + 250 });
+          const g = el._g || (el._g = { e: 0, x, py, t0: now + (r.top < vh ? qi++ : 0) * 160 + (this.state.mob ? 120 : 250) });
           const et = now < g.t0 ? 0 : e;
-          g.e += (et - g.e) * (et > g.e ? 0.022 : L); g.x += (x - g.x) * L; g.py += (py - g.py) * L;
+          g.e += (et - g.e) * (et > g.e ? (this.state.mob ? 0.05 : 0.022) : L); g.x += (x - g.x) * L; g.py += (py - g.py) * L;
           const dx = txt ? 0 : (vw / 2 - (r.left + r.width / 2)) * 0.22 * (1 - g.e);
           const s = txt ? 1 - 0.04 * g.x : (1 + 0.16 * (1 - g.e)) * (1 - 0.1 * g.x), b = 10 * g.x;
           inn.style.opacity = (Math.pow(g.e, 1.6) * (1 - 0.25 * g.x)).toFixed(3);
@@ -582,9 +582,10 @@ class Component extends DCLogic {
             fr.style.top = (T + (pr.height - h) / 2).toFixed(1) + 'px';
           } else {
           fr.style.left = (L * (1 - e)).toFixed(1) + 'px';
-          fr.style.top = T.toFixed(1) + 'px';
+          const dh = pr.height + (Math.min(vw2 / 2.35, vh2 * 0.9) - pr.height) * e;
+          fr.style.top = (T + (pr.height - dh) / 2).toFixed(1) + 'px';
           fr.style.width = (pr.width + (vw2 - pr.width) * e).toFixed(1) + 'px';
-          fr.style.height = pr.height.toFixed(1) + 'px';
+          fr.style.height = dh.toFixed(1) + 'px';
           }
           fr.style.cursor = p < 0.1 ? 'pointer' : 'default';
         }
@@ -686,7 +687,8 @@ class Component extends DCLogic {
     IMGS.forEach((_, i) => { v['open' + i] = open(i); });
     v.bWords = ((window.NON_CMS || {})['txt:bts'] || 'At NON STUDIO, these are our starting points. Through conversation, thoughtful styling, and a considered approach to light and composition, we create photographs that feel personal to you.').split(/\s+/).filter(Boolean);
     v.open5Pre = () => { if ((this.ex || 0) < 0.1) this.setCat(4); };
-    v.btsVideo = BTS_VIDEO ? React.createElement('video', { src: BTS_VIDEO, muted: true, loop: true, playsInline: true, 'data-bts': '1', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', background: '#161513' } }) : null; v.noBts = !BTS_VIDEO;
+    const cmsV = window.NON_CMS || {}, btsSrc = (this.state.mob ? (cmsV['vid:bts-m'] || cmsV['vid:bts']) : cmsV['vid:bts']) || BTS_VIDEO; v.noBts = !btsSrc;
+    v.btsVideo = btsSrc ? React.createElement('video', { key: btsSrc, src: btsSrc, muted: true, loop: true, playsInline: true, 'data-bts': '1', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', background: '#161513' } }) : null; v.noBts = !BTS_VIDEO;
     v.workOpen = !!this.state.workOpen && !this.state.mob;
     v.workRef = this.workRef || (this.workRef = React.createRef());
     v.workIn = () => { clearTimeout(this.wt); const a = this.workRef.current; const r = a ? a.getBoundingClientRect() : null; this.setState(r ? { workOpen: true, workPos: [r.left, r.bottom + 6] } : { workOpen: true }); };

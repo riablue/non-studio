@@ -10,7 +10,7 @@
 <helmet>
 <meta name="robots" content="noindex, nofollow">
 <title>Admin — NON STUDIO</title>
-<link rel="icon" type="image/png" href="./assets/favicon.png">
+<link rel="icon" type="image/png" href="./assets/favicon-yume.png">
 <script src="./config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700&family=Courier+Prime&display=swap" rel="stylesheet">
@@ -121,6 +121,33 @@ input,select,textarea,button{font:inherit;color:inherit}
     <sc-if value="{{ tabPhotos }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:64px">
         <p style="margin:0;max-width:560px;font-size:16px;line-height:1.5;color:#3d3a35">Upload replaces the photo on the live site right away. Large files are resized to 2400px automatically. Empty gallery frames stay hidden on the site.</p>
+        <section style="display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
+            <h2 style="margin:0;font-family:'Times New Roman',Times,serif;font-weight:400;text-transform:uppercase;letter-spacing:-0.05em;font-size:clamp(26px,3vw,40px);line-height:0.9">Home · BTS Video</h2>
+            <span style="font-family:'Courier Prime',monospace;font-size:13px;color:#6b665d">MP4 · plays muted on loop · under 50 MB · mobile falls back to desktop if empty</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+            <sc-for list="{{ vids }}" as="vd" hint-placeholder-count="2">
+              <div style="flex:0 1 {{ vd.w }};min-width:0;display:flex;flex-direction:column;gap:8px">
+                <div style="aspect-ratio:{{ vd.ratio }};position:relative;overflow:hidden;background:#161513;opacity:{{ vd.dim }}">
+                  <sc-if value="{{ vd.has }}" hint-placeholder-val="{{ false }}">
+                    <video src="{{ vd.src }}" controls="{{ true }}" playsInline="{{ true }}" preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>
+                  </sc-if>
+                  <sc-if value="{{ vd.none }}" hint-placeholder-val="{{ true }}">
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Courier Prime',monospace;font-size:12px;color:#b8b2a7">Empty</div>
+                  </sc-if>
+                </div>
+                <span style="font-family:'Courier Prime',monospace;font-size:12px;color:#4a463f">{{ vd.label }}</span>
+                <div style="display:flex;gap:14px;align-items:center;font-size:14px;font-weight:600">
+                  <label style="cursor:pointer;border-bottom:1px solid #161513">{{ vd.action }}<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange="{{ vd.onFile }}" style="display:none"></label>
+                  <sc-if value="{{ vd.has }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ vd.onRemove }}" style="background:none;border:0;padding:0;cursor:pointer;color:#6b665d;font-weight:600">Remove</button>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
         <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
           <section style="display:flex;flex-direction:column;gap:18px">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
@@ -332,6 +359,20 @@ class Component extends DCLogic {
     if (error) { this.flash('Could not reset: ' + error.message); return false; }
     this.setState(s => { const c = { ...s.content }; delete c[key]; const d = { ...s.drafts }; delete d[key]; return { content: c, drafts: d }; }); return true;
   }
+  async uploadVideo(k, file) {
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { this.flash('Video must be under 50 MB'); return; }
+    this.setState(s => ({ busy: { ...s.busy, [k]: true } }));
+    try {
+      const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+      const path = k.replace(':', '-') + '/' + Date.now() + '.' + ext;
+      const up = await this.sb.storage.from('site').upload(path, file, { contentType: file.type || 'video/mp4', cacheControl: '31536000' });
+      if (up.error) throw up.error;
+      const url = this.sb.storage.from('site').getPublicUrl(path).data.publicUrl;
+      if (await this.putKey(k, url)) this.flash('Video updated');
+    } catch (e) { this.flash('Upload failed: ' + (e.message || e)); }
+    this.setState(s => { const b = { ...s.busy }; delete b[k]; return { busy: b }; });
+  }
   async upload(id, file) {
     if (!file) return;
     this.setState(s => ({ busy: { ...s.busy, [id]: true } }));
@@ -374,6 +415,10 @@ class Component extends DCLogic {
       reload: () => { this.load(); this.flash('Refreshed'); },
       tabs: [['inquiries', 'Inquiries' + (counts.new ? ' (' + counts.new + ')' : '')], ['photos', 'Photos'], ['text', 'Text']].map(([k, label]) => ({ label, onClick: setTab(k), color: s.tab === k ? '#161513' : '#8a8375', line: s.tab === k ? '#161513' : 'transparent' })),
       tabInq: s.tab === 'inquiries', tabPhotos: s.tab === 'photos', tabText: s.tab === 'text',
+      vids: [['vid:bts', 'Desktop · 2.35:1 · 1920×817 or larger', '2.35/1', '520px'], ['vid:bts-m', 'Mobile · 1:1 square · 1080×1080', '1/1', '220px']].map(([k, label, ratio, w]) => { const busy = !!(s.busy && s.busy[k]), src = s.content[k] || '';
+        return { label, ratio, w, src, has: !!src, none: !src, dim: busy ? 0.4 : 1, action: busy ? 'Uploading…' : (src ? 'Replace' : 'Upload'),
+          onFile: e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; this.uploadVideo(k, f); },
+          onRemove: async () => { if (await this.dropKey(k)) this.flash('Video removed'); } }; }),
       filters: ['all'].concat(STATUSES).map(k => { const on = s.filter === k; return { label: (k === 'all' ? 'ACTIVE' : k.toUpperCase()) + ' ' + (k === 'all' ? counts.all - counts.archived : counts[k]), onClick: () => this.setState({ filter: k }), bg: on ? '#1d1a16' : 'transparent', color: on ? '#f3f1ec' : '#161513', border: on ? '#1d1a16' : '#cfc9bd' }; }),
       noRows: shown.length === 0,
       rows: shown.map(r => {
