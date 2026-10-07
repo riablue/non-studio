@@ -496,7 +496,7 @@ class Component extends DCLogic {
         this.raf = null;
         const vh = window.innerHeight;
         const ct = document.querySelector('#contact');
-        if (ct) { const hide = ct.getBoundingClientRect().top < 70; if (hide && this.state.workOpen) this.setState({ workOpen: false }); document.querySelectorAll('[data-hlogo]').forEach(hl => { hl.style.opacity = hide ? '0' : '1'; hl.style.pointerEvents = hide ? 'none' : ''; }); }
+        if (ct) { const hide = ct.getBoundingClientRect().top < 70; if (hide && this.state.workOpen) this.setState({ workOpen: false }); document.querySelectorAll('[data-hlogo]').forEach(hl => { const h2 = hide || (this.btsDark && hl.tagName === 'NAV'); hl.style.opacity = h2 ? '0' : '1'; hl.style.pointerEvents = h2 ? 'none' : ''; }); }
         document.querySelectorAll('[data-speed]').forEach(el => {
           const r = el.getBoundingClientRect(); const cur = parseFloat(el.dataset.ty || 0);
           const mid = r.top - cur + r.height / 2 - vh / 2;
@@ -599,6 +599,16 @@ class Component extends DCLogic {
         }
         const vo = q(0.64, 0.8), vd = exs.querySelector('[data-ex-video]');
         if (vd) vd.style.opacity = vo.toFixed(3);
+        const mobX = !!(this.mq && this.mq.matches), blk = mobX && vo > 0.5;
+        this.btsDark = !!(blk && fr && r.bottom >= vh2 - 1);
+        const lg = document.querySelector('header > a[data-hlogo]');
+        if (lg) { lg.style.transition = 'opacity .3s ease, transform .6s cubic-bezier(.22,.8,.2,1)';
+          lg.style.transform = this.btsDark ? 'translateX(' + ((lg.parentElement.clientWidth - lg.offsetWidth) / 2 - lg.offsetLeft).toFixed(1) + 'px)' : ''; }
+        const sk = exs.querySelector('[data-m=bts-sticky]');
+        if (sk) { const out = blk && fr && r.bottom < vh2 - 1, cut = fr ? fr.offsetTop + fr.offsetHeight : 0;
+          sk.style.transition = 'background-color .6s ease'; sk.style.backgroundColor = blk && !out ? '#000' : '';
+          sk.style.backgroundImage = out ? 'linear-gradient(#000 0, #000 ' + cut + 'px, transparent ' + cut + 'px)' : ''; }
+        if (hint) { const hc = blk ? '#f3f1ec' : '#161513'; hint.style.color = hc; const ar2 = hint.querySelector('[data-ex-arrow]'); if (ar2) ar2.style.borderTopColor = hc; }
         const v = exs.querySelector('video[data-bts]');
         if (v) { if (vo > 0.5 && r.bottom > 0 && v.paused) v.play().catch(() => {}); else if ((vo <= 0.5 || r.bottom <= 0) && !v.paused) v.pause(); }
       }
